@@ -1,0 +1,139 @@
+LTO Console App UI Hierarchy
+
+This hierarchy reflects the current console app implementation in `view/ui.py` and the backend endpoints defined in `SQL_Statements.sql`.
+
+[0] Exit
+
+[1] Driver Management
+>>[1] Add a Driver Record
+>>    <StoredProc: AddDriver(Driver_id, First_name, Middle_name, Last_name, Suffix, Date_of_birth, Weight, Height, Sex_assigned_at_birth, Nationality, Civil_status, Contact_number, Blood_type, House_number, Street_village, Barangay, City_municipality, Province, Region, Zip_code)>
+>>[2] Update a Driver Record
+>>    <StoredProc: FindDriver(Driver_id)>
+>>    <StoredProc: UpdateDriver(Driver_id, First_name, Middle_name, Last_name, Suffix, Date_of_birth, Weight, Height, Sex_assigned_at_birth, Nationality, Civil_status, Contact_number, Blood_type, House_number, Street_village, Barangay, City_municipality, Province, Region, Zip_code)>
+>>[3] Delete a Driver Record
+>>    <StoredProc: FindDriver(Driver_id)>
+>>    <StoredProc: DeleteDriver(Driver_id)>
+>>[4] Search Driver Records
+>>>>[1] Show Owned Vehicles
+>>>>    <View: ViewDriverVehicle>
+>>>>    <StoredProc: ShowDriverVehicles(Driver_id)>
+>>>>[2] Show License Information
+>>>>    <View: ViewDriverLicense>
+>>>>    <StoredProc: ShowDriverLicense(Driver_id)>
+>>>>[3] Show Traffic Violations
+>>>>    <View: ViewDriverTrafficViolationVehicle>
+>>>>    <StoredProc: ShowTrafficViolations(Driver_id)>
+>>>>[0] Return
+>>[5] Add a License Record
+>>    <StoredProc: FindDriver(Driver_id)>
+>>    <Query: SELECT * FROM LICENSE WHERE Driver_id = %s>
+>>    <StoredProc: AddLicense(License_number, License_type, License_status, License_issue_date, License_expiry_date, Driver_id)>
+>>    <StoredProc: AddLicenseDLCodes(License_number, Dl_codes)>
+>>    <StoredProc: AddLicenseCondition(License_number, Condition)>
+>>[6] Update a License Record
+>>    <StoredProc: ShowDriverLicense(Driver_id)>
+>>    <Query: SELECT * FROM ViewDriverLicense WHERE License_number = %s>
+>>    <StoredProc: GetLicenseDLCodes(License_number)>
+>>    <StoredProc: GetLicenseConditions(License_number)>
+>>    <StoredProc: UpdateLicense(License_number, License_type, License_status, License_expiry_date)>
+>>    <StoredProc: AddLicenseDLCodes(License_number, Dl_codes)>
+>>    <StoredProc: RemoveLicenseDLCodes(License_number, Dl_codes)>
+>>    <StoredProc: AddLicenseCondition(License_number, Condition)>
+>>    <StoredProc: RemoveLicenseCondition(License_number, Condition)>
+>>[0] Return
+
+[2] Vehicle Management
+>>[1] Add Vehicle Record
+>>    <StoredProc: AddVehicle(Vehicle_id, Engine_number, Plate_number, Chassis_number, Vehicle_type, Make, Model, Year, Body_type, Capacity, Color, Driver_id)>
+>>[2] Update Vehicle Record
+>>    <StoredProc: FindVehicle(Vehicle_id)>
+>>    <StoredProc: UpdateVehicle(Vehicle_id, Engine_number, Plate_number, Chassis_number, Vehicle_type, Make, Model, Year, Body_type, Capacity, Color, Driver_id)>
+>>[3] Delete Vehicle Record
+>>    <StoredProc: FindVehicle(Vehicle_id)>
+>>    <StoredProc: DeleteVehicle(Vehicle_id)>
+>>[4] Search Vehicle Records
+>>>>[1] Show Vehicle Owner
+>>>>    <View: ViewDriverVehicle>
+>>>>    <StoredProc: ShowVehicleOwner(Vehicle_id)>
+>>>>[2] Show Vehicle Registrations
+>>>>    <View: ViewVehicleRegistration>
+>>>>    <StoredProc: ShowVehicleRegistrations(Vehicle_id)>
+>>>>[3] Show Associated Traffic Violations
+>>>>    <View: ViewDriverTrafficViolationVehicle>
+>>>>    <StoredProc: ShowVehicleTrafficViolations(Vehicle_id)>
+>>>>[0] Return
+>>[0] Return
+
+[3] Vehicle Registration Management
+>>[1] Add a Vehicle Registration Record
+>>    <StoredProc: AddVehicleRegistration(Registration_number, Registration_date, Expiration_date, Registration_status, Official_receipt_number, Official_receipt_date, Document_ref_no, Ownership_type, Transfer_reason, Ownership_start_date, Ownership_end_date, Vehicle_id)>
+>>[2] Renew a Vehicle Registration
+>>    <StoredProc: FindVehicleRegistration(Registration_number)>
+>>    <StoredProc: RenewVehicleRegistration(Old_Registration_number, New_Registration_number, Registration_date, Expiration_date)>
+>>[3] Update a Vehicle Registration Record
+>>    <StoredProc: FindVehicleRegistration(Registration_number)>
+>>    <StoredProc: UpdateVehicleRegistration(Registration_number, Registration_date, Expiration_date, Registration_status, Official_receipt_number, Official_receipt_date, Document_ref_no, Ownership_type, Transfer_reason, Ownership_start_date, Ownership_end_date, Vehicle_id)>
+>>[4] Delete a Vehicle Registration Record
+>>    <StoredProc: FindVehicleRegistration(Registration_number)>
+>>    <StoredProc: DeleteVehicleRegistration(Registration_number)>
+>>[0] Return
+
+[4] Traffic Violation Management
+>>[1] Add a Traffic Violation Record
+>>    <StoredProc: AddTrafficViolation(Violation_date, Violation_status, Fine_amount, Payment_date, Driver_id, Vehicle_id, Violation_type_id, Officer_id, Location_id)>
+>>[2] Update a Traffic Violation Record
+>>    <StoredProc: FindTrafficViolation(Violation_id)>
+>>    <StoredProc: UpdateTrafficViolation(Violation_id, Violation_date, Violation_status, Fine_amount, Payment_date, Driver_id, Vehicle_id, Violation_type_id, Officer_id, Location_id)>
+>>[3] Delete a Traffic Violation Record
+>>    <StoredProc: FindTrafficViolation(Violation_id)>
+>>    <StoredProc: DeleteTrafficViolation(Violation_id)>
+>>[0] Return
+
+[5] Generate Reports
+>>[1] View All Registered Drivers
+>>>>[1] License Type
+>>>>>>[1] Student Permit
+>>>>>>    <View: ViewDriverLicenseStudentPermit>
+>>>>[2] Professional
+>>>>>>    <View: ViewDriverLicenseProfessional>
+>>>>[3] Non-Professional
+>>>>>>    <View: ViewDriverLicenseNonProfessional>
+>>>>>>[0] Return
+>>>>[2] License Status
+>>>>>>[1] Valid
+>>>>>>    <View: ViewDriverLicenseValid>
+>>>>>>[2] Expired
+>>>>>>    <View: ViewDriverLicenseExpired>
+>>>>>>[3] Suspended
+>>>>>>    <View: ViewDriverLicenseSuspended>
+>>>>>>[4] Revoked
+>>>>>>    <View: ViewDriverLicenseRevoked>
+>>>>>>[0] Return
+>>>>[3] Age Range
+>>>>>>    <StoredProc: ShowDriverAgeRange(MinAge, MaxAge)>
+>>>>[4] Sex Assigned at Birth
+>>>>>>[1] Male
+>>>>>>    <View: ShowMaleDrivers>
+>>>>>>[2] Female
+>>>>>>    <View: ShowFemaleDrivers>
+>>>>>>[0] Return
+>>[2] View All Vehicles Owned by a Given Driver
+>>    <StoredProc: ShowDriverVehicles(Driver_id)>
+>>[3] View All Vehicles with Expired Registrations as of a Given Date
+>>    <View: ViewExpiredVehicleRegistration>
+>>    <StoredProc: GetExpiredRegistrations(AsOfDate)>
+>>[4] View All Drivers with Expired or Suspended Licenses
+>>    <View: ViewExpiredSuspendedDriverLicenses>
+>>[5] View All Traffic Violations Committed by a Given Driver Within Specific Dates
+>>    <View: ViewDriverTrafficViolationVehicle>
+>>    <StoredProc: ShowDriverTrafficViolationsWithinDates(Driver_id, DateStart, DateEnd)>
+>>[6] View Total Number of Violations per Violation Type for a Given Year
+>>    <View: ViewTotalViolationsForGivenYear>
+>>    <StoredProc: ViewTotalViolationsForGivenYear(Year)>
+>>[7] View All Vehicles Involved in Violations Within a Given City or Region
+>>>>[1] City
+>>>>    <StoredProc: ShowVehicleViolationCity(City)>
+>>>>[2] Region
+>>>>    <StoredProc: ShowVehicleViolationRegion(Region)>
+>>>>[0] Return
+>>[0] Return

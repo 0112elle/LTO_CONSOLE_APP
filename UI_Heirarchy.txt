@@ -1,0 +1,185 @@
+
+WELCOME TO THE LTO SYSTEM!
+
+OPTIONS:
+[1] Driver Management
+	[1] Add a Driver Record
+		# This is a stored procedure that inserts a row to the DRIVER table.
+		<StoredProc: AddDriver(Driver_id, First_name, Middle_name, Last_name, Suffix, Date_of_birth, Weight, Height, Sex_assigned_at_birth, Nationality, Civil_status, Contact_number, Blood_type, House_number, Street_village, Barangay, City_municipality, Province, Region, Zip_code)>
+	[2] Update a Driver Record
+		# This is a stored procedure that searches if Driver_id exists from the DRIVER table.
+		<StoredProc: FindDriver(Driver_id)>
+		# This is a stored procedure that updates a row from the DRIVER table given a Driver_id.
+		<StoredProc: UpdateDriver(Driver_id, First_name, Middle_name, Last_name, Suffix, Date_of_birth, Weight, Height, Sex_assigned_at_birth, Nationality, Civil_status, Contact_number, Blood_type, House_number, Street_village, Barangay, City_municipality, Province, Region, Zip_code)>
+	[3] Delete a Driver Record
+		# This is a stored procedure that searches if Driver_id exists from the DRIVER table.
+		<StoredProc: FindDriver(Driver_id)>
+		# This is a stored procedure that deletes a row from the DRIVER table given a Driver_id.
+		<StoredProc: DeleteDriver(Driver_id)>
+	[4] Search Driver records
+		[1] Show Owned Vehicles
+			# This is a view that shows the DRIVER-VEHICLE table.
+			<View: ViewDriverVehicle as DRIVER right join VEHICLE>
+			# This is a stored procedure that shows all the vehicles owned given a Driver_id.
+			<StoredProc: ShowDriverVehicles(Driver_id)>
+		[2] Show License Information
+			# This is a view that shows the DRIVER-LICENSE-LICENSE_DLCODES-LICENSE_CONDITION table.
+			<View: ViewDriverLicense as DRIVER left join LICENSE join LICENSE_DLCODES join LICENSE_CONDITIONS>
+			# This is a stored procedure that shows the license information given a Driver_id.
+			<StoredProc: ShowDriverLicense(Driver_id)>
+		[3] Show Traffic Violations
+			# This is a view that shows the TRAFFIC_VIOLATION-TRAFFIC_VIOLATION_TYPE-DRIVER-VEHICLE-OFFICER table.
+			<View: ViewDriverTrafficViolationVehicle as DRIVER right join TRAFFIC_VIOLATION join TRAFFIC_VIOLATION_TYPE join VEHICLE join OFFICER>
+			# This is a stored procedure that shows the traffic violations committed given a Driver_id.
+			<StoredProc: ShowTrafficViolations(Driver_id)>
+		[0] Return
+	[0] Return
+[2] Vehicle Management
+	[1] Add Vehicle Record
+		# This is a stored procedure that inserts a row into the VEHICLE table.
+		<StoredProc: AddVehicle(Vehicle_id, Engine_number, Plate_number, Chassis_number, Vehicle_type, Make, Model, Year, Body_type, Capacity, Color, Driver_id)>
+	[2] Update Vehicle Record
+		# This is a stored procedure that searches if the input Vehicle_id exists within the VEHICLE table.
+		<StoredProc: FindVehicle(Vehicle_id)>
+		# This is a stored procedure that updates a row in the VEHICLE table with the Vehicle_id.
+		<StoredProc: UpdateVehicle(Vehicle_id, Engine_number, Plate_number, Chassis_number, Vehicle_type, Make, Model, Year, Body_type, Capacity, Color, Driver_id)>
+	[3] Delete Vehicle Record
+		# This is a stored procedure that searches if the input Vehicle_id exists within the VEHICLE table.
+		<StoredProc: FindVehicle(Vehicle_id)>
+		# This is a stored procedure that deletes a row from the VEHICLE table with the Vehicle_id.
+		<StoredProc: DeleteVehicle(Vehicle_id)>
+	[4] Search Vehicle records
+		[1] Show Vehicle Owner
+			# This is a view that shows the DRIVER-VEHICLE table.
+			<View: ViewDriverVehicle as DRIVER right join VEHICLE>
+			# This is a stored procedure that shows the driver given the Vehicle_id.
+			<StoredProc: ShowVehicleOwner(Vehicle_id)>
+		[2] Show Vehicle Registrations
+			# This is a view that shows the VEHICLE-VEHICLE_REGISTRATION table.
+			<View: ViewVehicleRegistration as VEHICLE right join VEHICLE_REGISTRATION>
+			# This is a stored procedure that shows all the vehicle registrations given a Vehicle_id.
+			<StoredProc: ShowVehicleRegistrations(Vehicle_id)>
+		[3] Show Associated Traffic Violations
+			# This is a view that shows the TRAFFIC_VIOLATION-TRAFFIC_VIOLATION_TYPE-DRIVER-VEHICLE-OFFICER table.
+			<View: ViewDriverTrafficViolationVehicle as DRIVER right join TRAFFIC_VIOLATION join TRAFFIC_VIOLATION_TYPE join VEHICLE join OFFICER>
+			# This is a stored procedure that shows all the traffic violations given a Vehicle_id.
+			<StoredProc: ShowVehicleTrafficViolations(Vehicle_id)>
+		[0] Return
+	[0] Return
+[3] Vehicle Registration Management
+	[1] Add a Vehicle Registration Record 
+		# This is a stored procedure that inserts a row into the VEHICLE_REGISTRATION table.
+		<StoredProc: AddVehicleRegistration(Registration_number, Registration_date, Expiration_date, Registration_status, Official_receipt_number, Official_receipt_date, Document_ref_no, Ownership_type, Transfer_reason, Ownership_start_date, Ownership_end_date, Vehicle_id)>
+	[2] Renew a Vehicle Registration
+		# This is a stored procedure that searches if the Registration_number exists within the VEHICLE_REGISTRATION table.
+		<StoredProc: FindVehicleRegistration(Registration_number)>
+		# This is a stored procedure that renews a vehicle registration by copying some attributes (the Official_receipt_number, Official_receipt_date, Document_ref_no, Ownership_type, Transfer_reason, Ownership_start_date, Ownership_end_date, Vehicle_id) from the previous vehicle registration but creates a new Registration_number, Registration_date, Expiration_date, and Registration_status.
+		<StoredProc: RenewVehicleRegistration(Registration_number)>
+	[3] Update a Vehicle Registration Record
+		# This is a stored procedure that searches if the Registration_number exists within the VEHICLE_REGISTRATION table.
+		<StoredProc: FindVehicleRegistration(Registration_number)>
+		# This is a stored procedure that updates a row in the VEHICLE_REGISTRATION table given a Registration_number.
+		<StoredProc: UpdateVehicleRegistration(Registration_date, Expiration_date, Registration_status, Official_receipt_number, Official_receipt_date, Document_ref_no, Ownership_type, Transfer_reason, Ownership_start_date, Ownership_end_date, Vehicle_id)>
+	[4] Delete a Vehicle Registration Record
+		# This is a stored procedure that searches if the Registration_number exists within the VEHICLE_REGISTRATION table.
+		<StoredProc: FindVehicleRegistration(Registration_number)>
+		# This is a stored procedure that deletes a row from the VEHICLE_REGISTRATION table given a Registration_number.
+		<StoredProc: DeleteVehicleRegistration(Registration_number)>
+	[0] Return
+[4] Traffic Violation Management
+	[1] Add a Traffic Violation Record
+		# This is a stored procedure that inserts a row into the TRAFFIC_VIOLATION table.
+		<StoredProc: AddTrafficViolation(Violation_id, Violation_date, Violation_status, Fine_amount, Payment_date, Driver_id, Vehicle_id, Violation_type_id, Officer_id, Location_id)>
+	[2] Update a Traffic Violation Record
+		# This is a stored procedure that searches if a Violation_id exists within the TRAFFIC_VIOLATION table.
+		<StoredProc: FindTrafficViolation(Violation_id)>
+		# This is a stored procedure that updates a row in the TRAFFIC_VIOLATION table with a given Violation_id.
+		<StoredProc: UpdateTrafficViolation(Violation_id, Violation_date, Violation_status, Fine_amount, Payment_date, Driver_id, Vehicle_id, Violation_type_id, Officer_id, Location_id)>
+	[3] Delete a Traffic Violation Record
+		# This is a stored procedure that searches if a Violation_id exists within the TRAFFIC_VIOLATION table.
+		<StoredProc: FindTrafficViolation(Violation_id)>
+		# This is a stored procedure that deletes a row in the TRAFFIC_VIOLATION table with a given Violation_id.
+		<StoredProc: DeleteTrafficViolation(Violation_id)>
+	[0] Return
+[5] Generate Reports
+	[1] View All Registered Drivers
+		[1] License Type
+			[1] Student Permit
+				# This is a view that shows the rows from the DRIVER-LICENSE-LICENSE_DLCODES-LICENSE_CONDITIONS table with “Student Permit” License_type.
+				<View: ViewDriverLicenseStudentPermit as DRIVER left join LICENSE join LICENSE_DLCODES join LICENSE_CONDITIONS WHERE License_type="Student Permit">
+			[2] Professional
+				# This is a view that shows the rows from the DRIVER-LICENSE-LICENSE_DLCODES-LICENSE_CONDITIONS table with “Professional” License_type.
+				<View: ViewDriverLicenseProfessional as DRIVER left join LICENSE join LICENSE_DLCODES join LICENSE_CONDITIONS WHERE License_type="Professional">
+			[3] Non-Professional
+				# This is a view that shows the rows from the DRIVER-LICENSE-LICENSE_DLCODES-LICENSE_CONDITIONS table with “Non-Professional” License_type.
+				<View: ViewDriverLicenseNonProfessional as DRIVER left join LICENSE join LICENSE_DLCODES join LICENSE_CONDITIONS WHERE License_type="Non-Professional">
+			[0] Return
+		[2] License Status
+			[1] Valid
+				# This is a view that shows the rows from the DRIVER-LICENSE-LICENSE_DLCODES-LICENSE_CONDITIONS table with “valid” License_status.
+				<View: ViewDriverLicenseValid as DRIVER left join LICENSE join LICENSE_DLCODES join LICENSE_CONDITIONS WHERE License_status="valid">
+			[2] Expired
+				# This is a view that shows the rows from the DRIVER-LICENSE-LICENSE_DLCODES-LICENSE_CONDITIONS table with “expired” License_status.
+				<View: ViewDriverLicenseExpired as DRIVER left join LICENSE join LICENSE_DLCODES join LICENSE_CONDITIONS WHERE License_status="expired">
+			[3] Suspended
+				# This is a view that shows the rows from the DRIVER-LICENSE-LICENSE_DLCODES-LICENSE_CONDITIONS table with “suspended” License_status.
+				<View: ViewDriverLicenseSuspended as DRIVER left join LICENSE join LICENSE_DLCODES join LICENSE_CONDITIONS WHERE License_status="suspended">
+			[4] Revoked
+				# This is a view that shows the rows from the DRIVER-LICENSE-LICENSE_DLCODES-LICENSE_CONDITIONS table with “revoked” License_status.
+				<View: ViewDriverLicenseRevoked as DRIVER left join LICENSE join LICENSE_DLCODES join LICENSE_CONDITIONS WHERE License_status="revoked">
+			[0] Return
+		[3] Age Range
+			# This is a view that shows the rows from the DRIVER-LICENSE-LICENSE_DLCODES-LICENSE_CONDITIONS table with Age that is within the MinAge and MaxAge.
+			<StoredProc: ShowDriverAgeRange(MinAge, MaxAge)>
+		[4] Sex Assigned at Birth
+			[1] Male
+				# This is a view that shows the rows from the DRIVER-LICENSE-LICENSE_DLCODES-LICENSE_CONDITIONS table with “Male” Sex_assigned_at_birth.
+				<View: ShowMaleDrivers as DRIVER WHERE Sex_assigned_at_birth="Male">
+			[2] Female
+				# This is a view that shows the rows from the DRIVER-LICENSE-LICENSE_DLCODES-LICENSE_CONDITIONS table with “Female” Sex_assigned_at_birth.
+				<View: ShowMaleDrivers as DRIVER WHERE Sex_assigned_at_birth="Female">
+			[0] Return
+	[2] View All Vehicles Owned by a Given Driver
+		# This is a view that shows the DRIVER-VEHICLE table.
+		<View: DriverVehicle as DRIVER right join VEHICLE>
+		# This is a stored procedure that shows all the vehicles owned given a Driver_id.
+		<StoredProc: ShowDriverVehicles(Driver_id)>
+	[3] View All Vehicles with Expired Registrations as of a Given Date
+		# This is a view that shows the VEHICLE-VEHICLE_REGISTRATION table with Registration_status = “expired”.
+		<View: ViewExpiredVehicleRegistration as VEHICLE right join VEHICLE_REGISTRATION WHERE Registration_status='expired'>
+	[4] View All Drivers with Expired or Suspended Licenses
+		# This is a view that shows the DRIVER-LICENSE table with “expired” or “suspended” License_status.
+		<View: ViewExpiredSuspendedDriverLicenses as DRIVER left join LICENSE WHERE License_status IN ('expired','suspended')>
+	[5] View All Traffic Violations Committed by a Given Driver Within Specific Dates
+		# This is a view that shows the TRAFFIC_VIOLATION-TRAFFIC_VIOLATION_TYPE-DRIVER-VEHICLE-OFFICER table.
+		<View: ViewDriverTrafficViolationVehicle as DRIVER right join TRAFFIC_VIOLATION join TRAFFIC_VIOLATION_TYPE join VEHICLE join OFFICER>
+		# This is a stored procedure that shows all the rows from the ViewDriverTrafficViolationVehicle view that matches the input Driver_id and Violation_date between DateStart and DateEnd.
+		<StoredProc: ShowDriverTrafficViolationsWithinDates(Driver_id, DateStart, DateEnd)>
+	[6] View Total Number of Violations per Violation Type for a Given Year
+		# This is a view that shows the count of traffic violations committed by a driver for a given year.
+		<View: ViewTotalViolationsForGivenYear as DRIVER right join TRAFFIC_VIOLATION COUNT(Violation_id) WHERE YEAR(Violation_date)=YYYY GROUP BY Driver_id>
+	[7] View All Vehicle Involved in Violations Within a Given City or Region
+		# This is a view that shows the VEHICLE-TRAFFIC_VIOLATION table.
+		<View: ViewVehicleViolations as VEHICLE right join TRAFFIC_VIOLATION>
+		# This is a stored procedure that shows all vehicles involved in violations for a given InputCity.
+		<StoredProc: ShowVehicleViolationCity(InputCity)>
+		# This is a stored procedure that shows all vehicles involved in violations for a given InputRegion.
+		<StoredProc: ShowVehicleViolationRegion(InputRegion)>
+	[0] Return
+[0] Exit
+
+
+
+
+
+
+
+Please have a look at this UI heirarchy. It is like a directory of options for the LTO System console application. For each endpoint of the options, I have also indicated their the views and stored procedures that I think I would need for this application to properly work.
+
+Now, my reason for creating this is that I think that the whole "lto_system" repository is messy in terms of code. Blocks of codes are not segregated according to the intended function of their respective Python programs. 
+
+My resolution is to create a better SQL_Statements file (modifying only the Views and Stored Procedures so that my database schema remains unchanged). These views and stored procedures would then be used for getting the data for what the UI option intends.
+
+Now, since there are heirarchy of options in the console app UI, I think it would be better to define functions for printing these options and getting/validating input from the user. So, in a sense, a function prints the options and gets input from the user, this input is validated, and another function is called for executing the optiong that the input is for.
+
+Do you understand these?
