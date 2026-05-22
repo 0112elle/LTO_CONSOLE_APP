@@ -1,7 +1,9 @@
-import sys
-import pymysql
+import sys      # For exiting on connection failure
+import pymysql  # For MariaDB/MySQL connectivity
 
 class MariaDBInstance:
+    
+    # For simplicity, we use a single cursor. In a more complex app, you might want to manage multiple cursors or use connection pooling.
     def __init__(self, user: str, password: str, database: str, host: str = "127.0.0.1", port: int = 3306):
         try:
             self.conn = pymysql.connect(
@@ -17,9 +19,11 @@ class MariaDBInstance:
             sys.exit(1)
         self.cursor = self.conn.cursor()
 
+    # Helper method to get the cursor, if needed for direct queries.
     def cur(self):
         return self.cursor
 
+    # Helper method to execute a stored procedure and fetch results.
     def callproc(self, proc_name, params=None):
         if params is None:
             params = []
@@ -39,6 +43,7 @@ class MariaDBInstance:
             print(f"Stored procedure error: {e}")
             return None
 
+    # Helper method to execute a query with parameters and fetch results.
     def query(self, sql, params=None):
         if params is None:
             params = []
@@ -51,6 +56,7 @@ class MariaDBInstance:
             print(f"Query error: {e}")
             return None
 
+    # Helper method to execute a query without fetching results (e.g., for INSERT/UPDATE).
     def close(self):
         try:
             self.cursor.close()
