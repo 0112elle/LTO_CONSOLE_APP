@@ -103,6 +103,11 @@ class DBController:
     def find_driver(self, driver_id: int):
         return self.call_proc('FindDriver', [driver_id])
 
+    # For calling the FindVehicle stored procedure.
+    # This finds a specific vehicle in the database based on the given vehicle ID.
+    def find_vehicle(self, vehicle_id: int):
+        return self.call_proc('FindVehicle', [vehicle_id])
+
 
     # FOR VEHICLE PROCEDURES ==================================================================================================================================
 
@@ -162,6 +167,18 @@ class DBController:
     # Retrieves the details of a specific traffic violation based on the given violation ID.
     def update_traffic_violation(self, *params):
         return self.call_proc('UpdateTrafficViolation', list(params))
+
+    # Looks up a traffic violation type by ID.
+    def find_violation_type(self, violation_type_id: int):
+        return self.query('SELECT * FROM TRAFFIC_VIOLATION_TYPE WHERE Violation_type_id = %s', [violation_type_id])
+
+    # Looks up an officer by ID.
+    def find_officer(self, officer_id: int):
+        return self.query('SELECT * FROM OFFICER WHERE Officer_id = %s', [officer_id])
+
+    # Looks up a location by ID.
+    def find_location(self, location_id: int):
+        return self.query('SELECT * FROM LOCATION WHERE Location_id = %s', [location_id])
 
     # Calls the DeleteViolation stored procedure.
     # Deletes a traffic violation record from the database based on the given violation ID.

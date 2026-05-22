@@ -2,6 +2,7 @@ from typing import Optional
 from datetime import datetime
 import shutil
 import textwrap
+import re
 from controller.db_controller import DBController
 from typing import Any, Dict, List
 
@@ -228,7 +229,7 @@ class UserInterface:
             if val == '/cancel':
                 return None
             if val == '' and required:
-                print('    Input required! Type \'n/a\' or leave blank if none.')
+                print('    Input required! Type \'n/a\' or leave blank only if null is allowed.')
                 continue
             if val == 'n/a':
                 return None
@@ -296,6 +297,25 @@ class UserInterface:
             return s.capitalize()
         except Exception:
             return str(val)
+
+    # Validates a value against a simple spec where '#' => digit and 'X' => uppercase letter.
+    def validate_pattern(self, value: Optional[str], spec: str) -> bool:
+        if value is None:
+            return False
+        # Build regex from spec: '#' -> \d, 'X' -> [A-Z], other chars are escaped
+        parts = []
+        for ch in spec:
+            if ch == '#':
+                parts.append(r"\d")
+            elif ch == 'X':
+                parts.append(r"[A-Z]")
+            else:
+                parts.append(re.escape(ch))
+        pattern = '^' + ''.join(parts) + '$'
+        try:
+            return re.match(pattern, value) is not None
+        except re.error:
+            return False
 
     # This function displays a record (dictionary of key-value pairs) in a formatted manner. 
     # This also aligns labels and wraps values for better readability, 
@@ -463,23 +483,36 @@ class UserInterface:
     # This function prompts the user for details about a new vehicle, displays a preview of the entered information, 
     # and then calls the database controller to add the vehicle record if the user confirms.
     def add_vehicle(self):
-        engine      = self.get_user_input('    Engine number:', True)
-        plate       = self.get_user_input('    Plate number:', True)
-        chassis     = self.get_user_input('    Chassis number:', True)
+        engine      = self.get_user_input('    Engine number (Format: ENG####X):', True)
+        if not self.validate_pattern(engine, 'ENG####X'):
+            print('    Engine number must match format ENG####X!')
+            return
+        plate       = self.get_user_input('    Plate number (Format: XXX####):', True)
+        if not self.validate_pattern(plate, 'XXX####'):
+            print('    Plate number must match format XXX####')
+            return
+        chassis     = self.get_user_input('    Chassis number (Format: CHS####XXX):', True)
+        if not self.validate_pattern(chassis, 'CHS####XXX'):
+            print('    Chassis number must match format CHS####XXX')
+            return
         vtype       = self.get_user_input("    Vehicle type ('motorcycle'|'private car'|'public utility vehicle'|'truck'|'others'):", True)
         make        = self.get_user_input('    Make:', True)
         model       = self.get_user_input('    Model:', True)
-        year        = self.get_user_input('    Year (YYYY):', True)
+        year        = self.get_user_input('    Year (Format: YYYY):', True)
         try:
-            # Validate that the year is a valid integer, which is important for ensuring that the vehicle record has a proper manufacturing year. 
-            # If the input is invalid, it informs the user and exits the add vehicle flow.
             year_i  = int(year)
         except Exception:
             print('Invalid year')
             return
-        body        = self.get_user_input('    Body type (n/a if none):', False)
-        capacity    = self.get_user_input('    Capacity (n/a if none):', False)
-        cap_i       = int(capacity) if capacity else None
+        body        = self.get_user_input('    Body type (E.g.: sedan, SUV. etc.):', True)
+        capacity    = self.get_user_input('    Capacity (Integer):', True)
+        try:
+            cap_i = int(capacity)
+            if cap_i <= 0:
+                raise ValueError
+        except Exception:
+            print('    Capacity must be a positive integer.')
+            return
         color       = self.get_user_input('    Color:', True)
         owner_id    = self.get_user_input('    Owner Driver ID:', True)
         try:
@@ -564,25 +597,40 @@ class UserInterface:
             print('    Aborted')
             return
         # Prompt fields in the same order as UpdateVehicle stored-proc
-        engine      = self.get_user_input('    Engine number (n/a to keep):', False)
-        plate       = self.get_user_input('    Plate number (n/a to keep):', False)
-        chassis     = self.get_user_input('    Chassis number (n/a to keep):', False)
-        vtype       = self.get_user_input('    Vehicle type (n/a to keep):', False)
-        make        = self.get_user_input('    Make (n/a to keep):', False)
-        model       = self.get_user_input('    Model (n/a to keep):', False)
-        year        = self.get_user_input('    Year (n/a to keep):', False)
+        engine      = self.get_user_input('    Engine number (Enter to keep):', False)
+        if engine and not self.validate_pattern(engine, 'ENG####X'):
+            print('    Engine number must match format ENG####X')
+            return
+        plate       = self.get_user_input('    Plate number (Enter to keep):', False)
+        if plate and not self.validate_pattern(plate, 'XXX####'):
+            print('    Plate number must match format XXX####')
+            return
+        chassis     = self.get_user_input('    Chassis number (Enter to keep):', False)
+        if chassis and not self.validate_pattern(chassis, 'CHS####XXX'):
+            print('    Chassis number must match format CHS####XXX')
+            return
+        vtype       = self.get_user_input('    Vehicle type (Enter to keep):', False)
+        make        = self.get_user_input('    Make (Enter to keep):', False)
+        model       = self.get_user_input('    Model (Enter to keep):', False)
+        year        = self.get_user_input('    Year (Enter to keep):', False)
         year_i      = int(year) if year else None
-        body        = self.get_user_input('    Body type (n/a to keep):', False)
-        capacity    = self.get_user_input('    Capacity (n/a to keep):', False)
-        cap_i       = int(capacity) if capacity else None
-        color       = self.get_user_input('    Color (n/a to keep):', False)
-        owner       = self.get_user_input('    Owner Driver ID (n/a to keep):', False)
+        body        = self.get_user_input('    Body type (Enter to keep):', False)
+        capacity    = self.get_user_input('    Capacity (Enter to keep):', False)
+        try:
+            cap_i = int(capacity) if capacity else None
+            if cap_i is not None and cap_i <= 0:
+                raise ValueError
+        except Exception:
+            print('    Capacity must be a positive integer.')
+            return
+        color       = self.get_user_input('    Color (Enter to keep):', False)
+        owner       = self.get_user_input('    Owner Driver ID (Enter to keep):', False)
         owner_id    = int(owner) if owner else None
         # Call the database controller to update the vehicle record with the new values, 
         # passing None for any fields that the user chose to keep unchanged.
         res         = self.db.update_vehicle(
             vid,                # Vehicle_id     (required to identify which record to update)
-            engine or None,     # Engine_number  (E.g.: ENG####A)
+            engine or None,     # Engine_number  (E.g.: ENG####X)
             plate or None,      # Plate_number   (E.g.: ABC####)
             chassis or None,    # Chassis_number (E.g.: CHS####XYZ)
             vtype or None,      # Vehicle_type   (E.g.: 'motorcycle', 'private car', 'public utility vehicle', 'truck', 'others')
@@ -639,14 +687,18 @@ class UserInterface:
     # displaying the current details, and then prompting for new values for each field.
     def update_vehicle_registration_flow(self):
         # Prompt the user to enter the registration number of the vehicle registration record they wish to update.
-        reg = self.get_user_input('    Registration number to update:', True)
+        reg = self.get_user_input('    Registration number to update (Format: REG#####):', True)
         if reg is None:
             return
+        else:
+            if not self.validate_pattern(reg, 'REG#####'):
+                print('    Registration number must match format "REG#####"!')
+                return
         # Attempt to find the vehicle registration record in the database using the provided registration number.
         # If not found, handle the exception and set found to None.
         found = self.db.find_vehicle_registration(reg)
         if not found:
-            print('    Registration not found')
+            print('    Registration not found!')
             return
         rec = found[0]
         # Display the current details of the vehicle registration record to the user before confirming the update,
@@ -658,7 +710,7 @@ class UserInterface:
             return
         # Prompt the user for new values for each field of the vehicle registration record, 
         # allow to keep existing values by entering 'n/a'.
-        reg_date = self.get_user_input('    Registration date (YYYY-MM-DD) (n/a to keep):', False)
+        reg_date = self.get_user_input('    Registration date (YYYY-MM-DD) (Enter to keep):', False)
         # Validate the registration date input to ensure it is in the correct format. 
         # If the input is invalid, inform the user and exit the update flow.
         if reg_date and validate_date(reg_date) is None:
@@ -666,7 +718,7 @@ class UserInterface:
             return
         # Prompt for the expiration date and validate it in the same way as the registration date, 
         # ensuring that any new expiration date entered by the user is in the correct format before proceeding with the update.
-        exp_date = self.get_user_input('    Expiration date (YYYY-MM-DD) (n/a to keep):', False)
+        exp_date = self.get_user_input('    Expiration date (YYYY-MM-DD) (Enter to keep):', False)
         if exp_date and validate_date(exp_date) is None:
             print('    Invalid date')
             return
@@ -677,22 +729,22 @@ class UserInterface:
                 print('    Expiration date must not be earlier than the registration date')
                 return
         # Prompt for the status and validate it.
-        status = self.get_user_input('    Status (n/a to keep):', False)
+        status = self.get_user_input('    Status (Enter to keep):', False)
         # Prompt for the OR number.
-        or_number = self.get_user_input('    OR number (n/a to keep):', False)
+        or_number = self.get_user_input('    OR number (Enter to keep):', False)
         # Prompt for the OR date and validate it.
-        or_date = self.get_user_input('    OR date (YYYY-MM-DD) (n/a to keep):', False)
+        or_date = self.get_user_input('    OR date (YYYY-MM-DD) (Enter to keep):', False)
         if or_date and validate_date(or_date) is None:
             print('    Invalid OR date')
             return
         # Prompt for the document reference and ownership type, transfer reason, ownership start and end dates, and vehicle ID, 
         # allowing the user to keep existing values by entering 'n/a' for each field.
-        doc_ref             = self.get_user_input('    Doc ref (n/a to keep):', False)
-        ownership           = self.get_user_input('    Ownership type (n/a to keep):', False)
-        transfer_reason     = self.get_user_input('    Transfer reason (n/a to keep):', False)
-        start_date          = self.get_user_input('    Ownership start date (YYYY-MM-DD) (n/a to keep):', False)
-        end_date            = self.get_user_input('    Ownership end date (YYYY-MM-DD) (n/a to keep):', False)
-        vehicle_id          = self.get_user_input('    Vehicle ID (n/a to keep):', False)
+        doc_ref             = self.get_user_input('    Doc ref (Enter to keep):', False)
+        ownership           = self.get_user_input('    Ownership type (Enter to keep):', False)
+        transfer_reason     = self.get_user_input('    Transfer reason (Enter to keep):', False)
+        start_date          = self.get_user_input('    Ownership start date (YYYY-MM-DD) (Enter to keep):', False)
+        end_date            = self.get_user_input('    Ownership end date (YYYY-MM-DD) (Enter to keep):', False)
+        vehicle_id          = self.get_user_input('    Vehicle ID (Enter to keep):', False)
         vehicle_id_int      = int(vehicle_id) if vehicle_id else None
         effective_start_date = start_date or rec.get('Ownership_start_date')
         effective_end_date = end_date or rec.get('Ownership_end_date')
@@ -730,7 +782,7 @@ class UserInterface:
         # If not found, handle the exception and set found to None.
         found = self.db.find_vehicle_registration(reg)
         if not found:
-            print('    Registration not found')
+            print('    Registration not found!')
             return
         # Display the current details of the vehicle registration record to the user before confirming the deletion,
         # allowing them to review the information and cancel if they change their mind.
@@ -785,6 +837,9 @@ class UserInterface:
         except Exception:
             print('    Invalid Driver ID')
             return
+        if not self.db.find_driver(did):
+            print('    Driver not found')
+            return
         # Prompt for the vehicle ID and validate that it can be converted to an integer, 
         # which is necessary for linking the violation record to a specific vehicle in the database.
         vehicle_id      = self.get_user_input('    Vehicle ID:', True)
@@ -792,6 +847,9 @@ class UserInterface:
             vid = int(vehicle_id)
         except Exception:
             print('    Invalid Vehicle ID')
+            return
+        if not self.db.find_vehicle(vid):
+            print('    Vehicle not found')
             return
         # Prompt for the violation type ID and validate that it can be converted to an integer,
         # which is necessary for linking the violation record to a specific violation type in the database.
@@ -801,6 +859,9 @@ class UserInterface:
         except Exception:
             print('    Invalid violation type ID')
             return
+        if not self.db.find_violation_type(vtid):
+            print('    Violation type not found')
+            return
         # Prompt for the officer ID and validate that it can be converted to an integer,
         # which is necessary for linking the violation record to a specific officer in the database.
         officer_id      = self.get_user_input('    Officer ID:', True)
@@ -809,6 +870,9 @@ class UserInterface:
         except Exception:
             print('    Invalid officer ID')
             return
+        if not self.db.find_officer(oid):
+            print('    Officer not found')
+            return
         # Prompt for the location ID and validate that it can be converted to an integer,
         # which is necessary for linking the violation record to a specific location in the database.
         location_id     = self.get_user_input('    Location ID:', True)
@@ -816,6 +880,9 @@ class UserInterface:
             lid = int(location_id)
         except Exception:
             print('    Invalid location ID')
+            return
+        if not self.db.find_location(lid):
+            print('    Location not found')
             return
         # Call the database controller to add the new traffic violation record with the provided details,
         res = self.db.add_traffic_violation(
@@ -883,19 +950,54 @@ class UserInterface:
         # Prompt for the driver ID, vehicle ID, violation type ID, officer ID, and location ID, 
         # validating that each can be converted to an integer if provided.
         driver      = self.get_user_input('    Driver ID (n/a to keep):', False)
-        driver_i = int(driver) if driver else None
+        try:
+            driver_i = int(driver) if driver else None
+        except Exception:
+            print('    Invalid Driver ID')
+            return
+        if driver_i is not None and not self.db.find_driver(driver_i):
+            print('    Driver not found')
+            return
         # Prompt for the vehicle ID and validate that it can be converted to an integer if provided.
         vehicle     = self.get_user_input('    Vehicle ID (n/a to keep):', False)
-        vehicle_i = int(vehicle) if vehicle else None
+        try:
+            vehicle_i = int(vehicle) if vehicle else None
+        except Exception:
+            print('    Invalid Vehicle ID')
+            return
+        if vehicle_i is not None and not self.db.find_vehicle(vehicle_i):
+            print('    Vehicle not found')
+            return
         # Prompt for the violation type ID and validate that it can be converted to an integer if provided.
         vtype_id    = self.get_user_input('    Violation type ID (n/a to keep):', False)
-        vtype_i = int(vtype_id) if vtype_id else None
+        try:
+            vtype_i = int(vtype_id) if vtype_id else None
+        except Exception:
+            print('    Invalid violation type ID')
+            return
+        if vtype_i is not None and not self.db.find_violation_type(vtype_i):
+            print('    Violation type not found')
+            return
         # Prompt for the officer ID and validate that it can be converted to an integer if provided.
         officer     = self.get_user_input('    Officer ID (n/a to keep):', False)
-        officer_i = int(officer) if officer else None
+        try:
+            officer_i = int(officer) if officer else None
+        except Exception:
+            print('    Invalid officer ID')
+            return
+        if officer_i is not None and not self.db.find_officer(officer_i):
+            print('    Officer not found')
+            return
         # Prompt for the location ID and validate that it can be converted to an integer if provided.
         location    = self.get_user_input('    Location ID (n/a to keep):', False)
-        location_i = int(location) if location else None
+        try:
+            location_i = int(location) if location else None
+        except Exception:
+            print('    Invalid location ID')
+            return
+        if location_i is not None and not self.db.find_location(location_i):
+            print('    Location not found')
+            return
         # Call the database controller to update the traffic violation record with the new values, 
         # passing None for any fields that the user chose to keep unchanged, and then present the result of the update operation to the user.
         res = self.db.update_traffic_violation(vid_i, vdatetime or None, status or None, fine_f, payment_date or None, driver_i, vehicle_i, vtype_i, officer_i, location_i)
@@ -980,12 +1082,22 @@ class UserInterface:
             print('    Invalid civil status')
             return
         # Prompt for the contact number and validate that it is not longer than 11 characters before adding the driver record to the database.
-        contact         = self.get_user_input('    Contact number:', True)
-        if len(contact) > 11:
-            print('    Invalid contact length')
+        contact         = self.get_user_input('    Contact number (Format: 09#########):', True)
+        if not self.validate_pattern(contact, '09#########'):
+            print('    Contact number must match format "09#########"!')
             return
-        # Prompt for the blood type (Optional)
-        blood           = self.get_user_input('    Blood type:', True)
+        if len(contact) > 11:
+            print('    Invalid contact length. Must be an 11-digit number starting with "09"')
+            return
+        # Prompt for the blood type
+        blood           = self.get_user_input('    Blood type (E.g.: A+, A-, B+, B-, AB+, AB-, O+, or O-):', True)
+        # Validate blood type: accept only standard types (case-insensitive)
+        if blood:
+            b = blood.strip().upper()
+            allowed = ['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-']
+            if validate_enum(b, allowed) is None:
+                print('    Invalid blood type. Allowed: A+, A-, B+, B-, AB+, AB-, O+, O-')
+                return
         # Prompt for the house number and validate that it is not empty.
         house           = self.get_user_input('    House number:', True)
         # Prompt for the street / village and validate that it is not empty.
@@ -1101,25 +1213,37 @@ class UserInterface:
             return val
         # Prompt for new values for each field of the driver record, allowing the user to keep existing values by entering 'n/a' or leaving it blank.
         try:
-            first           = pick('First_name',            '    First name (n/a to keep):')
-            middle          = pick('Middle_name',           '    Middle name (n/a to keep):')
-            last            = pick('Last_name',             '    Last name (n/a to keep):')
-            suffix          = pick('Suffix',                '    Suffix (n/a to keep):')
-            dob             = pick('Date_of_birth',         '    Date of birth (YYYY-MM-DD) (n/a to keep):', validator=validate_date)
-            weight          = pick('Weight',                '    Weight (kg) (n/a to keep):', cast=float)
-            height          = pick('Height',                '    Height (cm) (n/a to keep):', cast=float)
-            sex             = pick('Sex_assigned_at_birth', "    Sex ('Male'|'Female'|'Other') (n/a to keep):", validator=lambda v: validate_enum(v, ['Male', 'Female', 'Other']))
-            nationality     = pick('Nationality',           '    Nationality (n/a to keep):')
-            civil           = pick('Civil_status',          "    Civil status (n/a to keep):", validator=lambda v: validate_enum(v, ['Single', 'Married', 'Divorced', 'Widowed']))
-            contact         = pick('Contact_number',        '    Contact number (n/a to keep):')
-            blood           = pick('Blood_type',            '    Blood type (n/a to keep):')
-            house           = pick('House_number',          '    House number (n/a to keep):')
-            street          = pick('Street_village',        '    Street / village (n/a to keep):')
-            barangay        = pick('Barangay',              '    Barangay (n/a to keep):')
-            city            = pick('City_municipality',     '    City / municipality (n/a to keep):')
-            province        = pick('Province',              '    Province (n/a to keep):')
-            region          = pick('Region',                '    Region (n/a to keep):')
-            zipc            = pick('Zip_code',              '    Zip code (n/a to keep):')
+            first           = pick('First_name',            '    First name (Enter to keep):')
+            middle          = pick('Middle_name',           '    Middle name (Enter to keep):')
+            last            = pick('Last_name',             '    Last name (Enter to keep):')
+            suffix          = pick('Suffix',                '    Suffix (Enter to keep):')
+            dob             = pick('Date_of_birth',         '    Date of birth (YYYY-MM-DD) (Enter to keep):', validator=validate_date)
+            weight          = pick('Weight',                '    Weight (kg) (Enter to keep):', cast=float)
+            height          = pick('Height',                '    Height (cm) (Enter to keep):', cast=float)
+            sex             = pick('Sex_assigned_at_birth', "    Sex ('Male'|'Female'|'Other') (Enter to keep):", validator=lambda v: validate_enum(v, ['Male', 'Female', 'Other']))
+            nationality     = pick('Nationality',           '    Nationality (Enter to keep):')
+            civil           = pick('Civil_status',          "    Civil status (Enter to keep):", validator=lambda v: validate_enum(v, ['Single', 'Married', 'Divorced', 'Widowed']))
+            contact         = pick('Contact_number',        '    Contact number (Enter to keep):')
+            if not self.validate_pattern(contact, '09#########'):
+                print('    Contact number must match format "09#########"!')
+                return
+            blood           = pick('Blood_type',            '    Blood type (E.g.: A+, A-, B+, B-, AB+, AB-, O+, or O-):')
+            if blood:
+                b = blood.strip().upper()
+                allowed = ['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-']
+                if validate_enum(b, allowed) is None:
+                    print('    Invalid blood type. Allowed: A+, A-, B+, B-, AB+, AB-, O+, O-')
+                    return
+            house           = pick('House_number',          '    House number (Enter to keep):')
+            street          = pick('Street_village',        '    Street / village (Enter to keep):')
+            barangay        = pick('Barangay',              '    Barangay (Enter to keep):')
+            city            = pick('City_municipality',     '    City / municipality (Enter to keep):')
+            province        = pick('Province',              '    Province (Enter to keep):')
+            region          = pick('Region',                '    Region (Enter to keep):')
+            zipc            = pick('Zip_code',              '    Zip code (Enter to keep):')
+            if not zipc.isdigit() or len(zipc) != 4:
+                print('    Zip code must be 4 digits')
+                return
         except ValueError as e:
             print(str(e))
             return
@@ -1493,10 +1617,14 @@ class UserInterface:
     # and then calling the database controller to add the registration record if the user confirms.
     def add_vehicle_registration(self):
         # Prompt for the registration number.
-        reg_number = self.get_user_input('    Registration number (e.g. REG0001):', True)
+        reg_number = self.get_user_input('    Registration number (Form: REG#####):', True)
         if reg_number is None:
             print('    Canceled')
             return
+        else:
+            if not self.validate_pattern(reg_number, 'REG#####'):
+                print('    Registration number must match format "REG#####"!')
+                return
         # Prompt for the registration date and validate that it is in the correct format (YYYY-MM-DD).
         reg_date = self.get_user_input('    Registration date (YYYY-MM-DD):', True)
         if validate_date(reg_date) is None:
@@ -1516,17 +1644,24 @@ class UserInterface:
             print('    Invalid status')
             return
         # Prompt for the official receipt number.
-        or_number = self.get_user_input('    Official receipt number:', True)
+        or_number = self.get_user_input('    Official receipt number (Format: OR#####):', True)
         if or_number is None:
             print('    Official receipt number is required')
             return
+        else:
+            if not self.validate_pattern(or_number, 'OR#####'):
+                print('    Official receipt number must match format "OR#####"!')
+                return
         # Prompt for the official receipt date and validate that it is in the correct format (YYYY-MM-DD).
         or_date = self.get_user_input('    Official receipt date (YYYY-MM-DD):', True)
         if validate_date(or_date) is None:
             print('    Invalid OR date format')
             return
         # Prompt for the document reference number (Optional)
-        doc_ref = self.get_user_input('    Document ref no (n/a if none):', False)
+        doc_ref = self.get_user_input('    Document ref no (Format: DR-### | enter if none):', False)
+        if doc_ref not in (None, '') and not self.validate_pattern(doc_ref, 'DR-###'):
+            print('    Document ref no must match format "DR-###"')
+            return
         # Prompt for the ownership type and validate that it is one of the allowed values ('owned', 'financed', 'leased').
         ownership = self.get_user_input("    Ownership type ('owned'|'financed'|'leased') (n/a if none):", False)
         if ownership and validate_enum(ownership, ['owned', 'financed', 'leased']) is None:
@@ -1552,7 +1687,7 @@ class UserInterface:
         try:
             vid = int(vehicle_id)
         except ValueError:
-            print('Vehicle ID must be integer')
+            print('    Vehicle ID must be integer')
             return
         # Attempt to find the vehicle record in the database using the provided Vehicle ID.
         res = self.db.add_vehicle_registration(
@@ -1580,11 +1715,19 @@ class UserInterface:
         if old_reg is None:
             print('    Canceled')
             return
+        else: 
+            if not self.validate_pattern(old_reg, 'REG####'):
+                print('    Registration number must match format "REG####"!')
+                return
         # Prompt for the new registration number, which will replace the old registration number in the database record.
         new_reg = self.get_user_input('    New registration number:', True)
         if new_reg is None:
             print('    Canceled')
             return
+        else: 
+            if not self.validate_pattern(new_reg, 'REG####'):
+                print('    Registration number must match format "REG####"!')
+                return
         # Prompt for the registration date and validate that it is in the correct format (YYYY-MM-DD).
         reg_date = self.get_user_input('    Registration date (YYYY-MM-DD):', True)
         if validate_date(reg_date) is None:
